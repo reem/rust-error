@@ -13,7 +13,8 @@ pub struct Phantom<T>;
 
 pub struct RawError<Marker> {
     pub description: Option<&'static str>,
-    pub details: Option<String>
+    pub details: Option<String>,
+    pub extensions: Box<Any>
 }
 
 impl<T: 'static> RawError<T> {
