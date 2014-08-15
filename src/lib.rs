@@ -9,16 +9,23 @@ extern crate convertible;
 use convertible::Convertible;
 use std::intrinsics::TypeId;
 use std::any::Any;
+use std::fmt::{Show, Formatter, FormatError};
 
-#[deriving(Show)]
-pub struct RawError<Marker> {
+pub use self::abstract::AbstractError;
+
+mod abstract;
+
+pub struct RawError<Mark> {
     pub description: Option<&'static str>,
     pub details: Option<String>,
-    pub extensions: Option<Box<Any>>
+    pub extensions: Option<Box<Any>>,
+    pub cause: Option<Box<AbstractError>>
 }
 
 impl<T: 'static> RawError<T> {
     pub fn is<R: 'static>(&self) -> bool { TypeId::of::<T>() == TypeId::of::<R>() }
+
+    pub fn to_abstract(self) -> Box<AbstractError> { box self as Box<AbstractError> }
 }
 
 pub trait Error<T: 'static>: Convertible<RawError<T>> {
@@ -29,6 +36,12 @@ pub trait Error<T: 'static>: Convertible<RawError<T>> {
 
 impl<O: 'static, E: Error<O>> Convertible<E> for RawError<O> {
     fn convert(err: &E) -> Option<RawError<O>> { Some(err.as_raw()) }
+}
+
+impl<T> Show for RawError<T> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
+        write!(f, "RawError {{ description: {}, details: {}, cause: {} }}", &self.description, &self.details, &self.cause)
+    }
 }
 
 #[cfg(test)]
@@ -61,7 +74,8 @@ mod test {
             RawError {
                 description: Some("Parse-Error"),
                 details: None,
-                extensions: None
+                extensions: None,
+                cause: None
             }
         }
     }
@@ -70,7 +84,8 @@ mod test {
         let raw: RawError<ParseErrorMarker> = RawError {
             description: None,
             details: None,
-            extensions: None
+            extensions: None,
+            cause: None
         };
 
         let parse = raw.to::<ParseError>().unwrap();
@@ -88,7 +103,8 @@ mod test {
             RawError {
                 description: None,
                 details: None,
-                extensions: None
+                extensions: None,
+                cause: None
             }
         }
 
