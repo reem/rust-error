@@ -31,3 +31,56 @@ impl<O: 'static, E: Error<O>> Convertible<E> for RawError<O> {
     fn convert(err: &E) -> Option<RawError<O>> { Some(err.as_raw()) }
 }
 
+#[cfg(test)]
+mod test {
+    use super::{RawError, Error};
+    use convertible::{Convertible, Raw};
+
+    #[deriving(Show)]
+    pub struct ParseErrorMarker;
+
+    #[deriving(Show, PartialEq)]
+    pub struct ParseError {
+        location: uint,
+    }
+
+    impl<T: 'static> Convertible<RawError<T>> for ParseError {
+        fn convert(err: &RawError<T>) -> Option<ParseError> {
+            if err.is::<ParseErrorMarker>() {
+                Some(ParseError {
+                    location: 7u,
+                })
+            } else {
+                None
+            }
+        }
+    }
+
+    impl Error<ParseErrorMarker> for ParseError {
+        fn as_raw(&self) -> RawError<ParseErrorMarker> {
+            RawError {
+                description: Some("Parse-Error"),
+                details: None,
+                extensions: None
+            }
+        }
+    }
+
+    #[test] fn test_convert_from_raw() {
+        let raw: RawError<ParseErrorMarker> = RawError {
+            description: None,
+            details: None,
+            extensions: None
+        };
+
+        let parse = raw.to::<ParseError>().unwrap();
+
+        assert_eq!(parse, ParseError { location: 7u });
+    }
+
+    #[test] fn test_convert_to_raw() {
+        let parse = ParseError { location: 10u };
+        assert_eq!(parse.to::<RawError<ParseErrorMarker>>().unwrap().description, Some("Parse-Error"));
+    }
+}
+
