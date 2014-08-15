@@ -4,30 +4,20 @@ use std::any::Any;
 
 pub trait AbstractError: Show {
     fn description(&self) -> &Option<&'static str>;
-    fn description_mut(&mut self) -> &mut Option<&'static str>;
-
     fn details(&self) -> &Option<String>;
-    fn details_mut(&mut self) -> &mut Option<String>;
+    fn cause(&self) -> &Option<Box<AbstractError>>;
 
     fn extensions(&self) -> &Option<Box<Any>>;
     fn extensions_mut(&mut self) -> &mut Option<Box<Any>>;
-
-    fn cause(&self) -> &Option<Box<AbstractError>>;
-    fn cause_mut(&mut self) -> &mut Option<Box<AbstractError>>;
 }
 
 impl<T> AbstractError for RawError<T> {
     fn description(&self) -> &Option<&'static str> { &self.description }
-    fn description_mut(&mut self) -> &mut Option<&'static str> { &mut self.description }
-
     fn details(&self) -> &Option<String> { &self.details }
-    fn details_mut(&mut self) -> &mut Option<String> { &mut self.details }
+    fn cause(&self) -> &Option<Box<AbstractError>> { &self.cause }
 
     fn extensions(&self) -> &Option<Box<Any>> { &self.extensions }
     fn extensions_mut(&mut self) -> &mut Option<Box<Any>> { &mut self.extensions }
-
-    fn cause(&self) -> &Option<Box<AbstractError>> { &self.cause }
-    fn cause_mut(&mut self) -> &mut Option<Box<AbstractError>> { &mut self.cause }
 }
 
 impl Show for Box<AbstractError> {
