@@ -23,9 +23,46 @@ pub struct RawError<Mark> {
 }
 
 impl<T: 'static> RawError<T> {
+    pub fn new(description: &'static str) -> RawError<T> {
+        RawError {
+            description: Some(description),
+            details: None,
+            extensions: None,
+            cause: None
+        }
+    }
+
+    pub fn wrap<R: 'static>(description: &'static str, sub: RawError<R>) -> RawError<T> {
+        RawError {
+            description: Some(description),
+            details: None,
+            extensions: None,
+            cause: Some(sub.abstract())
+        }
+    }
+
+    pub fn wrap_with_details<R: 'static>(description: &'static str,
+                                         details: String, sub: RawError<R>) -> RawError<T> {
+        RawError {
+            description: Some(description),
+            details: Some(details),
+            extensions: None,
+            cause: Some(sub.abstract())
+        }
+    }
+
+    pub fn with_details(description: &'static str, details: String) -> RawError<T> {
+        RawError {
+            description: Some(description),
+            details: Some(details),
+            extensions: None,
+            cause: None
+        }
+    }
+
     pub fn is<R: 'static>(&self) -> bool { TypeId::of::<T>() == TypeId::of::<R>() }
 
-    pub fn to_abstract(self) -> Box<AbstractError> { box self as Box<AbstractError> }
+    pub fn abstract(self) -> Box<AbstractError> { box self as Box<AbstractError> }
 }
 
 pub trait Error<T: 'static>: Convertible<RawError<T>> {
