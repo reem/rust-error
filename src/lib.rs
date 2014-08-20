@@ -4,22 +4,23 @@
 
 //! A generic, extendable Error type.
 
-extern crate convertible;
-
-use convertible::Convertible;
+use std::any::{Any, AnyRefExt};
+use std::fmt::Show;
+use std::{raw, mem};
 use std::intrinsics::TypeId;
-use std::any::Any;
-use std::fmt::{Show, Formatter, FormatError};
 
-pub use self::abstract::AbstractError;
+pub trait Error: Show + Any + ErrorPrivate {
+    fn name(&self) -> &'static str;
 
-mod abstract;
+    fn description(&self) -> Option<String> {
+        None
+    }
 
-pub struct RawError<Mark> {
-    pub description: Option<&'static str>,
-    pub details: Option<String>,
-    pub extensions: Option<Box<Any>>,
-    pub cause: Option<Box<AbstractError>>
+    fn cause(&self) -> Option<Box<Error>> {
+        None
+    }
+
+    fn abstract(self) -> Box<Error> { box self as Box<Error> }
 }
 
 impl<T: 'static> RawError<T> {
