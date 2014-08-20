@@ -4,12 +4,8 @@ name = "error"
 version = "0.0.0"
 authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
 
-[[lib]]
+[lib]
 
 name = "error"
 path = "src/lib.rs"
-
-[dependencies.convertible]
-
-git = "https://github.com/reem/rust-convertible"
 
