@@ -12,13 +12,11 @@ use std::intrinsics::TypeId;
 pub trait Error: Show + Any + ErrorPrivate {
     fn name(&self) -> &'static str;
 
-    fn description(&self) -> Option<String> {
-        None
-    }
+    fn description(&self) -> Option<&str> { None }
 
-    fn cause(&self) -> Option<Box<Error>> {
-        None
-    }
+    fn cause(&self) -> Option<&Error> { None }
+
+    fn unwrap(self) -> Option<Box<Error>>;
 
     fn abstract(self) -> Box<Error> { box self as Box<Error> }
 }
