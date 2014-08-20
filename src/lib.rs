@@ -23,63 +23,40 @@ pub trait Error: Show + Any + ErrorPrivate {
     fn abstract(self) -> Box<Error> { box self as Box<Error> }
 }
 
-impl<T: 'static> RawError<T> {
-    pub fn new(description: &'static str) -> RawError<T> {
-        RawError {
-            description: Some(description),
-            details: None,
-            extensions: None,
-            cause: None
-        }
-    }
-
-    pub fn wrap<R: 'static>(description: &'static str, sub: RawError<R>) -> RawError<T> {
-        RawError {
-            description: Some(description),
-            details: None,
-            extensions: None,
-            cause: Some(sub.abstract())
-        }
-    }
-
-    pub fn wrap_with_details<R: 'static>(description: &'static str,
-                                         details: String, sub: RawError<R>) -> RawError<T> {
-        RawError {
-            description: Some(description),
-            details: Some(details),
-            extensions: None,
-            cause: Some(sub.abstract())
-        }
-    }
-
-    pub fn with_details(description: &'static str, details: String) -> RawError<T> {
-        RawError {
-            description: Some(description),
-            details: Some(details),
-            extensions: None,
-            cause: None
-        }
-    }
-
-    pub fn is<R: 'static>(&self) -> bool { TypeId::of::<T>() == TypeId::of::<R>() }
-
-    pub fn abstract(self) -> Box<AbstractError> { box self as Box<AbstractError> }
+// Oh DST we wait for thee.
+pub trait ErrorRefExt<'a> {
+    fn is<O: 'static>(self) -> bool;
+    fn downcast<O: 'static>(self) -> Option<&'a O>;
 }
 
-pub trait Error<T: 'static>: Convertible<RawError<T>> {
-    fn as_raw(&self) -> RawError<T>;
-
-    fn is<R: 'static>(&self) -> bool { TypeId::of::<T>() == TypeId::of::<R>() }
-}
-
-impl<O: 'static, E: Error<O>> Convertible<E> for RawError<O> {
-    fn convert(err: &E) -> Option<RawError<O>> { Some(err.as_raw()) }
-}
-
-impl<T> Show for RawError<T> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> {
-        write!(f, "RawError {{ description: {}, details: {}, cause: {} }}", &self.description, &self.details, &self.cause)
+impl<'a> ErrorRefExt<'a> for &'a Error {
+    fn is<O: 'static>(self) -> bool {
+        self.type_id() == TypeId::of::<O>()
     }
+
+    fn downcast<O: 'static>(self) -> Option<&'a O> {
+        // Copied from std::any::Any
+        if self.is::<O>() {
+            unsafe {
+                // Get the raw representation of the trait object
+                let to: raw::TraitObject = mem::transmute_copy(&self);
+
+                // Extract the data pointer
+                Some(mem::transmute(to.data))
+            }
+        } else {
+            None
+        }
+    }
+}
+
+// Copied from std::any::Any.
+trait ErrorPrivate {
+    fn type_id(&self) -> TypeId;
+}
+
+impl<T: 'static> ErrorPrivate for T {
+    fn type_id(&self) -> TypeId { TypeId::of::<T>() }
 }
 
 #[cfg(test)]
