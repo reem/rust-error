@@ -24,7 +24,7 @@ pub trait Error: Show + Any + ErrorPrivate {
 // Oh DST we wait for thee.
 pub trait ErrorRefExt<'a> {
     fn is<O: 'static>(self) -> bool;
-    fn downcast<O: 'static>(self) -> Option<&'a O>;
+    fn downcast<O: 'static + Error>(self) -> Option<&'a O>;
 }
 
 impl<'a> ErrorRefExt<'a> for &'a Error {
@@ -32,7 +32,7 @@ impl<'a> ErrorRefExt<'a> for &'a Error {
         self.type_id() == TypeId::of::<O>()
     }
 
-    fn downcast<O: 'static>(self) -> Option<&'a O> {
+    fn downcast<O: 'static + Error>(self) -> Option<&'a O> {
         // Copied from std::any::Any
         if self.is::<O>() {
             unsafe {
