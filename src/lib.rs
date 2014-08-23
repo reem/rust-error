@@ -61,6 +61,11 @@ impl Show for Box<Error> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> { self.fmt(f) }
 }
 
+impl Error for String {
+    fn name(&self) -> &'static str { "String-Only Error" }
+    fn description(&self) -> Option<&str> { Some(self.as_slice()) }
+}
+
 #[cfg(test)]
 mod test {
     use super::{Error, ErrorRefExt};
