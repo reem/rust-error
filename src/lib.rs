@@ -5,7 +5,7 @@
 //! A generic, extendable Error type.
 
 use std::any::{Any, AnyRefExt};
-use std::fmt::Show;
+use std::fmt::{Show, Formatter, FormatError};
 use std::{raw, mem};
 use std::intrinsics::TypeId;
 
@@ -55,6 +55,10 @@ trait ErrorPrivate {
 
 impl<T: 'static> ErrorPrivate for T {
     fn type_id(&self) -> TypeId { TypeId::of::<T>() }
+}
+
+impl Show for Box<Error> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> { self.fmt(f) }
 }
 
 #[cfg(test)]
