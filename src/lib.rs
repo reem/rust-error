@@ -1,6 +1,7 @@
 #![license = "MIT"]
 //#![deny(missing_doc)]
 #![deny(warnings)]
+#![feature(macro_rules)]
 
 //! A generic, extendable Error type.
 
@@ -66,6 +67,25 @@ impl Error for String {
     fn description(&self) -> Option<&str> { Some(self.as_slice()) }
 }
 
+#[macro_export]
+macro_rules! match_error {
+    ($m:expr, $i1:pat: $t1:ty => $e1:expr) => {{
+        let tmp = $m;
+        match tmp.downcast::<$t1>() {
+            Some($i1) => Some($e1),
+            None => None,
+        }
+    }};
+
+    ($m:expr, $i1:pat: $t1:ty => $e1:expr, $($i:pat: $t:ty => $e:expr),+) => {{
+        let tmp = $m;
+        match tmp.downcast::<$t1>() {
+            Some($i1) => Some($e1),
+            None => match_error!(tmp, $($i: $t => $e),*),
+        }
+    }};
+}
+
 #[cfg(test)]
 mod test {
     use super::{Error, ErrorRefExt};
@@ -85,8 +105,11 @@ mod test {
         }
 
         fn generic_handler(raw: Box<Error>) {
-            let parse = raw.downcast::<ParseError>().unwrap();
-            assert_eq!(*parse, ParseError { location: 7u });
+            (match_error! { raw,
+                parse: ParseError => {
+                    assert_eq!(*parse, ParseError { location: 7u })
+                }
+            }).unwrap()
         }
 
         generic_handler(produce_parse_error())
