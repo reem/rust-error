@@ -58,7 +58,7 @@ impl<T: 'static> ErrorPrivate for T {
     fn type_id(&self) -> TypeId { TypeId::of::<T>() }
 }
 
-impl Show for Box<Error> {
+impl Show for Box<Error + Send> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> { self.fmt(f) }
 }
 
