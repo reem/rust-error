@@ -10,16 +10,16 @@ use std::fmt::{Show, Formatter, FormatError};
 use std::{raw, mem};
 use std::intrinsics::TypeId;
 
-pub trait Error: Show + Any + ErrorPrivate {
+pub trait Error: Show + Any + Send + ErrorPrivate {
     fn name(&self) -> &'static str;
 
     fn description(&self) -> Option<&str> { None }
 
-    fn cause(&self) -> Option<&Error> { None }
+    fn cause(&self) -> Option<&Error + Send> { None }
 
-    fn unwrap(self) -> Option<Box<Error>> { None }
+    fn unwrap(self) -> Option<Box<Error + Send>> { None }
 
-    fn abstract(self) -> Box<Error> { box self as Box<Error> }
+    fn abstract(self) -> Box<Error + Send> { box self as Box<Error + Send> }
 }
 
 // Oh DST we wait for thee.
@@ -28,7 +28,7 @@ pub trait ErrorRefExt<'a> {
     fn downcast<O: 'static + Error>(self) -> Option<&'a O>;
 }
 
-impl<'a> ErrorRefExt<'a> for &'a Error {
+impl<'a> ErrorRefExt<'a> for &'a Error + Send {
     fn is<O: 'static>(self) -> bool {
         self.type_id() == TypeId::of::<O>()
     }
@@ -100,11 +100,11 @@ mod test {
     }
 
     #[test] fn test_generic() {
-        fn produce_parse_error() -> Box<Error> {
+        fn produce_parse_error() -> Box<Error + Send> {
             ParseError { location: 7u }.abstract()
         }
 
-        fn generic_handler(raw: Box<Error>) {
+        fn generic_handler(raw: Box<Error + Send>) {
             (match_error! { raw,
                 parse: ParseError => {
                     assert_eq!(*parse, ParseError { location: 7u })
