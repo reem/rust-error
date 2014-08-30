@@ -5,12 +5,11 @@
 
 //! A generic, extendable Error type.
 
-use std::any::{Any, AnyRefExt};
 use std::fmt::{Show, Formatter, FormatError};
 use std::{raw, mem};
 use std::intrinsics::TypeId;
 
-pub trait Error: Show + Any + Send + ErrorPrivate {
+pub trait Error: Show + Send + ErrorPrivate {
     fn name(&self) -> &'static str;
 
     fn description(&self) -> Option<&str> { None }
