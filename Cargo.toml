@@ -9,3 +9,7 @@ authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
 name = "error"
 path = "src/lib.rs"
 
+[dependencies.typeable]
+
+git = "https://github.com/reem/rust-typeable.git"
+

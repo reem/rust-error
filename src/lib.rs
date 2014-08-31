@@ -5,11 +5,15 @@
 
 //! A generic, extendable Error type.
 
+extern crate typeable;
+
 use std::fmt::{Show, Formatter, FormatError};
 use std::{raw, mem};
 use std::intrinsics::TypeId;
 
-pub trait Error: Show + Send + ErrorPrivate {
+use typeable::Typeable;
+
+pub trait Error: Show + Send + Typeable {
     fn name(&self) -> &'static str;
 
     fn description(&self) -> Option<&str> { None }
@@ -23,16 +27,14 @@ pub trait Error: Show + Send + ErrorPrivate {
 
 // Oh DST we wait for thee.
 pub trait ErrorRefExt<'a> {
-    fn is<O: 'static>(self) -> bool;
-    fn downcast<O: 'static + Error>(self) -> Option<&'a O>;
+    fn is<O: Error>(self) -> bool;
+    fn downcast<O: Error>(self) -> Option<&'a O>;
 }
 
 impl<'a> ErrorRefExt<'a> for &'a Error + Send {
-    fn is<O: 'static>(self) -> bool {
-        self.type_id() == TypeId::of::<O>()
-    }
+    fn is<O: Error>(self) -> bool { self.get_type() == TypeId::of::<O>() }
 
-    fn downcast<O: 'static + Error>(self) -> Option<&'a O> {
+    fn downcast<O: Error>(self) -> Option<&'a O> {
         // Copied from std::any::Any
         if self.is::<O>() {
             unsafe {
@@ -46,15 +48,6 @@ impl<'a> ErrorRefExt<'a> for &'a Error + Send {
             None
         }
     }
-}
-
-// Copied from std::any::Any.
-trait ErrorPrivate {
-    fn type_id(&self) -> TypeId;
-}
-
-impl<T: 'static> ErrorPrivate for T {
-    fn type_id(&self) -> TypeId { TypeId::of::<T>() }
 }
 
 impl Show for Box<Error + Send> {
