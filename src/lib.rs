@@ -18,11 +18,11 @@ pub trait Error: Show + Send + Typeable {
 
     fn description(&self) -> Option<&str> { None }
 
-    fn cause(&self) -> Option<&Error + Send> { None }
+    fn cause(&self) -> Option<&Error> { None }
 
-    fn unwrap(self) -> Option<Box<Error + Send>> { None }
+    fn unwrap(self) -> Option<Box<Error>> { None }
 
-    fn abstract(self) -> Box<Error + Send> { box self as Box<Error + Send> }
+    fn abstract(self) -> Box<Error> { box self as Box<Error> }
 }
 
 // Oh DST we wait for thee.
@@ -31,7 +31,7 @@ pub trait ErrorRefExt<'a> {
     fn downcast<O: Error>(self) -> Option<&'a O>;
 }
 
-impl<'a> ErrorRefExt<'a> for &'a Error + Send {
+impl<'a> ErrorRefExt<'a> for &'a Error {
     fn is<O: Error>(self) -> bool { self.get_type() == TypeId::of::<O>() }
 
     fn downcast<O: Error>(self) -> Option<&'a O> {
@@ -50,7 +50,7 @@ impl<'a> ErrorRefExt<'a> for &'a Error + Send {
     }
 }
 
-impl Show for Box<Error + Send> {
+impl Show for Box<Error> {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> { self.fmt(f) }
 }
 
@@ -92,11 +92,11 @@ mod test {
     }
 
     #[test] fn test_generic() {
-        fn produce_parse_error() -> Box<Error + Send> {
+        fn produce_parse_error() -> Box<Error> {
             ParseError { location: 7u }.abstract()
         }
 
-        fn generic_handler(raw: Box<Error + Send>) {
+        fn generic_handler(raw: Box<Error>) {
             (match_error! { raw,
                 parse: ParseError => {
                     assert_eq!(*parse, ParseError { location: 7u })
