@@ -55,7 +55,7 @@ impl Show for Box<Error> {
 }
 
 impl Error for String {
-    fn name(&self) -> &'static str { "String-Only Error" }
+    fn name(&self) -> &'static str { "String Error" }
     fn description(&self) -> Option<&str> { Some(self.as_slice()) }
 }
 
