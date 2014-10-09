@@ -41,7 +41,7 @@ impl Error for ParseError {
 
 #[test] fn test_generic() {
     fn produce_parse_error() -> Box<Error> {
-        ParseError { location: 7u }.abstract()
+        ParseError { location: 7u }.erase()
     }
 
     fn generic_handler(raw: Box<Error>) {

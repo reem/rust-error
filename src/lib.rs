@@ -22,7 +22,7 @@ pub trait Error: Show + Send + Typeable {
 
     fn unwrap(self) -> Option<Box<Error>> { None }
 
-    fn abstract(self) -> Box<Error> { box self as Box<Error> }
+    fn erase(self) -> Box<Error> { box self as Box<Error> }
 }
 
 // Oh DST we wait for thee.
@@ -93,7 +93,7 @@ mod test {
 
     #[test] fn test_generic() {
         fn produce_parse_error() -> Box<Error> {
-            ParseError { location: 7u }.abstract()
+            ParseError { location: 7u }.erase()
         }
 
         fn generic_handler(raw: Box<Error>) {
