@@ -19,10 +19,6 @@ pub trait Error: Show + Send + Typeable {
     fn description(&self) -> Option<&str> { None }
 
     fn cause(&self) -> Option<&Error> { None }
-
-    fn unwrap(self) -> Option<Box<Error>> { None }
-
-    fn erase(self) -> Box<Error> { box self as Box<Error> }
 }
 
 // Oh DST we wait for thee.
@@ -93,7 +89,7 @@ mod test {
 
     #[test] fn test_generic() {
         fn produce_parse_error() -> Box<Error> {
-            ParseError { location: 7u }.erase()
+            box ParseError { location: 7u }
         }
 
         fn generic_handler(raw: Box<Error>) {
