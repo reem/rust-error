@@ -7,7 +7,7 @@
 
 extern crate typeable;
 
-use std::fmt::{Show, Formatter, FormatError};
+use std::fmt::{mod, Show, Formatter};
 use std::{raw, mem};
 use std::intrinsics::TypeId;
 
@@ -47,7 +47,7 @@ impl<'a> ErrorRefExt<'a> for &'a Error {
 }
 
 impl Show for Box<Error> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError> { (**self).fmt(f) }
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result { (**self).fmt(f) }
 }
 
 impl Error for String {
