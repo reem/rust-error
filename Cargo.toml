@@ -1,7 +1,7 @@
 [package]
 
 name = "error"
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
 
 [lib]
@@ -9,7 +9,6 @@ authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
 name = "error"
 path = "src/lib.rs"
 
-[dependencies.typeable]
-
-git = "https://github.com/reem/rust-typeable.git"
+[dependencies]
+typeable = "*"
 
