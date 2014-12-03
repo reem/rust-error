@@ -3,11 +3,9 @@
 name = "error"
 version = "0.0.1"
 authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
-
-[lib]
-
-name = "error"
-path = "src/lib.rs"
+description = "A fancy error type for highly generic cases."
+repository = "https://github.com/reem/rust-error"
+license = "MIT"
 
 [dependencies]
 typeable = "*"
