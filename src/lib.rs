@@ -1,4 +1,4 @@
-//#![deny(missing_doc)]
+#![deny(missing_docs)]
 #![deny(warnings)]
 #![feature(macro_rules)]
 
@@ -9,49 +9,83 @@ extern crate typeable;
 use std::fmt::{mod, Show, Formatter};
 use std::{raw, mem};
 use std::intrinsics::TypeId;
+use std::error::Error as StdError;
+use std::error::FromError;
 
 use typeable::Typeable;
 
-pub trait Error: Show + Send + Typeable {
-    fn name(&self) -> &'static str;
+/// An extension to std::error::Error which provides dynamic downcasting of
+/// errors for use in highly generic contexts.
+///
+/// ## When to use this trait
+///
+/// In the vast majority of cases, a library-specific `enum` should be used
+/// for cases where there can be many different types of errors. This has
+/// the benefit of being very performant and benefiting from all sorts
+/// of static checking at both the instantiation site and the handling
+/// site of the error.
+///
+/// In other cases, being generic over `std::error::Error` may be correct
+/// - usually for logging errors or in other places where an error is
+/// used as *input*.
+///
+/// Now, a motivating example for this trait, which doesn't fall under
+/// either of these cases:
+///
+/// Imagine we are creating a simple web middleware for verifying incoming
+/// HTTP requests. It will take in many different user-defined `Verifier`s
+/// and will call them one after the other, rejecting the request on any
+/// error.
+///
+/// The first step would be to write a `Verifier` trait:
+///
+/// ```ignore
+/// # struct Request;
+/// pub trait Verifier {
+///     /// Verify the request, yielding an error if the request is invalid.
+///     fn verify(&Request) -> Result<(), ???>;
+/// }
+/// ```
+///
+/// A problem quickly arises - what type do we use for the `Err` case? We
+/// cannot use a concrete type since each `Verifier` may wish to throw
+/// any number of different errors, and we cannot use a generic since
+/// the type is chosen by the implementor, not the caller, and it cannot
+/// be a generic on the trait since we will want to store many `Verifier`s
+/// together.
+///
+/// Enter: `Box<error::Error>`, a type which can be used to represent
+/// any `std::error::Error` with the sufficient bounds, and can *also*
+/// be handled later by downcasting it to the right error using either
+/// `.downcast` or the `match_error!` macro. This type can be used to meet
+/// the needs of consumers like `Verifier`, but should not be used in cases
+/// where enums or generics are better suited.
+pub trait Error: Show + Send + Typeable + StdError { }
 
-    fn description(&self) -> Option<&str> { None }
+impl<S: StdError + Show + Send + Typeable> Error for S { }
 
-    fn cause(&self) -> Option<&Error> { None }
-}
+impl Error {
+    /// Is this `Error` object of type `E`?
+    pub fn is<E: Error>(&self) -> bool { self.get_type() == TypeId::of::<E>() }
 
-// Oh DST we wait for thee.
-pub trait ErrorRefExt<'a> {
-    fn is<O: Error>(self) -> bool;
-    fn downcast<O: Error>(self) -> Option<&'a O>;
-}
-
-impl<'a> ErrorRefExt<'a> for &'a Error {
-    fn is<O: Error>(self) -> bool { self.get_type() == TypeId::of::<O>() }
-
-    fn downcast<O: Error>(self) -> Option<&'a O> {
-        // Copied from std::any::Any
-        if self.is::<O>() {
-            unsafe {
-                // Get the raw representation of the trait object
-                let to: raw::TraitObject = mem::transmute_copy(&self);
-
-                // Extract the data pointer
-                Some(mem::transmute(to.data))
-            }
+    /// If this error is `E`, downcast this error to `E`, by reference.
+    pub fn downcast<E: Error>(&self) -> Option<&E> {
+        if self.is::<E>() {
+            unsafe { Some(mem::transmute(
+                mem::transmute::<&Error, raw::TraitObject>(self).data
+            )) }
         } else {
             None
         }
     }
 }
 
-impl Show for Box<Error> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result { (**self).fmt(f) }
+impl Show for Error {
+    fn fmt(&self, f: &mut Formatter) -> fmt::Result { (*self).fmt(f) }
 }
 
-impl Error for String {
-    fn name(&self) -> &'static str { "String Error" }
-    fn description(&self) -> Option<&str> { Some(self.as_slice()) }
+impl<E: Error> FromError<E> for Box<Error> {
+    fn from_error(e: E) -> Box<Error> { box e }
 }
 
 #[macro_export]
@@ -75,15 +109,16 @@ macro_rules! match_error {
 
 #[cfg(test)]
 mod test {
-    use super::{Error, ErrorRefExt};
+    use super::Error;
+    use std::error::Error as StdError;
 
     #[deriving(Show, PartialEq)]
     pub struct ParseError {
         location: uint,
     }
 
-    impl Error for ParseError {
-        fn name(&self) -> &'static str { "Parse Error" }
+    impl StdError for ParseError {
+        fn description(&self) -> &str { "Parse Error" }
     }
 
     #[test] fn test_generic() {
