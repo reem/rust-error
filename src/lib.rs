@@ -1,12 +1,12 @@
+#![allow(staged_unstable, staged_experimental)]
 #![deny(missing_docs)]
 #![deny(warnings)]
-#![feature(macro_rules)]
 
 //! A generic, extendable Error type.
 
 extern crate typeable;
 
-use std::fmt::{mod, Show, Formatter};
+use std::fmt::Show;
 use std::{raw, mem};
 use std::intrinsics::TypeId;
 use std::error::Error as StdError;
@@ -80,17 +80,13 @@ impl Error {
     }
 }
 
-impl Show for Error {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result { (*self).fmt(f) }
-}
-
 impl<E: Error> FromError<E> for Box<Error> {
-    fn from_error(e: E) -> Box<Error> { box e }
+    fn from_error(e: E) -> Box<Error> { Box::new(e) }
 }
 
 #[macro_export]
 macro_rules! match_error {
-    ($m:expr, $i1:pat: $t1:ty => $e1:expr) => {{
+    ($m:expr, $i1:pat => $t1:ty: $e1:expr) => {{
         let tmp = $m;
         match tmp.downcast::<$t1>() {
             Some($i1) => Some($e1),
@@ -98,7 +94,7 @@ macro_rules! match_error {
         }
     }};
 
-    ($m:expr, $i1:pat: $t1:ty => $e1:expr, $($i:pat: $t:ty => $e:expr),+) => {{
+    ($m:expr, $i1:pat => $t1:ty: $e1:expr, $($i:pat => $t:ty: $e:expr),+) => {{
         let tmp = $m;
         match tmp.downcast::<$t1>() {
             Some($i1) => Some($e1),
@@ -112,7 +108,7 @@ mod test {
     use super::Error;
     use std::error::Error as StdError;
 
-    #[deriving(Show, PartialEq)]
+    #[derive(Show, PartialEq)]
     pub struct ParseError {
         location: uint,
     }
@@ -123,12 +119,12 @@ mod test {
 
     #[test] fn test_generic() {
         fn produce_parse_error() -> Box<Error> {
-            box ParseError { location: 7u }
+            Box::new(ParseError { location: 7u })
         }
 
         fn generic_handler(raw: Box<Error>) {
             (match_error! { raw,
-                parse: ParseError => {
+                parse => ParseError: {
                     assert_eq!(*parse, ParseError { location: 7u })
                 }
             }).unwrap()
