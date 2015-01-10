@@ -1,4 +1,4 @@
-#![allow(staged_unstable, staged_experimental)]
+#![allow(unstable)]
 #![deny(missing_docs)]
 #![deny(warnings)]
 
