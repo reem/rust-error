@@ -8,7 +8,7 @@ extern crate typeable;
 
 use std::fmt::Show;
 use std::{raw, mem};
-use std::intrinsics::TypeId;
+use std::any::TypeId;
 use std::error::Error as StdError;
 use std::error::FromError;
 
