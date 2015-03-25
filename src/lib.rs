@@ -1,6 +1,6 @@
-#![allow(unstable)]
+#![feature(core)]
 #![deny(missing_docs)]
-#![deny(warnings)]
+#![cfg_attr(test, deny(warnings))]
 
 //! A generic, extendable Error type.
 
