@@ -1,15 +1,15 @@
-#![feature(core)]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
 
 //! A generic, extendable Error type.
 
 extern crate typeable;
+extern crate traitobject;
 
 use std::fmt::Debug;
-use std::{raw, mem};
 use std::any::TypeId;
 use std::error::Error as StdError;
+use std::mem;
 
 use typeable::Typeable;
 
@@ -70,9 +70,7 @@ impl Error {
     /// If this error is `E`, downcast this error to `E`, by reference.
     pub fn downcast<E: Error>(&self) -> Option<&E> {
         if self.is::<E>() {
-            unsafe { Some(mem::transmute(
-                mem::transmute::<&Error, raw::TraitObject>(self).data
-            )) }
+            unsafe { Some(mem::transmute(traitobject::data(self))) }
         } else {
             None
         }
