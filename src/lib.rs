@@ -10,7 +10,6 @@ use std::fmt::Debug;
 use std::{raw, mem};
 use std::any::TypeId;
 use std::error::Error as StdError;
-use std::error::FromError;
 
 use typeable::Typeable;
 
@@ -80,8 +79,8 @@ impl Error {
     }
 }
 
-impl<E: Error> FromError<E> for Box<Error> {
-    fn from_error(e: E) -> Box<Error> { Box::new(e) }
+impl<E: Error> From<E> for Box<Error> {
+    fn from(e: E) -> Box<Error> { Box::new(e) }
 }
 
 #[macro_export]
