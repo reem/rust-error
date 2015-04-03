@@ -1,5 +1,3 @@
-#![allow(unstable)]
-
 #[macro_use(match_error)]
 extern crate error;
 
@@ -9,7 +7,7 @@ use error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
-#[derive(Show, PartialEq, Copy)]
+#[derive(Debug, PartialEq, Copy)]
 pub struct ParseError {
     location: usize,
 }
