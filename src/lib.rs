@@ -125,13 +125,13 @@ mod test {
 
     #[test] fn test_generic() {
         fn produce_parse_error() -> Box<Error> {
-            Box::new(ParseError { location: 7us })
+            Box::new(ParseError { location: 7 })
         }
 
         fn generic_handler(raw: Box<Error>) {
             (match_error! { raw,
                 parse => ParseError: {
-                    assert_eq!(*parse, ParseError { location: 7us })
+                    assert_eq!(*parse, ParseError { location: 7 })
                 }
             }).unwrap()
         }
