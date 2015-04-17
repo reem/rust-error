@@ -7,7 +7,7 @@ use error::Error;
 use std::fmt::Display;
 use std::fmt::Formatter;
 
-#[derive(Debug, PartialEq, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct ParseError {
     location: usize,
 }
@@ -23,13 +23,13 @@ impl Display for ParseError {
 }
 
 fn produce_parse_error() -> Box<Error> {
-    Box::new(ParseError { location: 7us })
+    Box::new(ParseError { location: 7 })
 }
 
 fn generic_handler(raw: Box<Error>) {
     (match_error! { &*raw,
         parse => ParseError: {
-            assert_eq!(*parse, ParseError { location: 7us })
+            assert_eq!(*parse, ParseError { location: 7 })
         }
     }).unwrap()
 }
