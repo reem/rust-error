@@ -22,11 +22,11 @@ impl Display for ParseError {
     }
 }
 
-fn produce_parse_error() -> Box<Error> {
+fn produce_parse_error() -> Box<Error + Send> {
     Box::new(ParseError { location: 7 })
 }
 
-fn generic_handler(raw: Box<Error>) {
+fn generic_handler(raw: Box<Error + Send>) {
     (match_error! { &*raw,
         parse => ParseError: {
             assert_eq!(*parse, ParseError { location: 7 })

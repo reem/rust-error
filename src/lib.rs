@@ -77,6 +77,20 @@ impl Error {
     }
 }
 
+impl Error + Send {
+    /// Is this `Error + Send` object of type `E`?
+    pub fn is<E: Error + Send>(&self) -> bool { self.get_type() == TypeId::of::<E>() }
+
+    /// If this error is `E`, downcast this error to `E`, by reference.
+    pub fn downcast<E: Error + Send>(&self) -> Option<&E> {
+        if self.is::<E>() {
+            unsafe { Some(mem::transmute(traitobject::data(self))) }
+        } else {
+            None
+        }
+    }
+}
+
 impl<E: Error> From<E> for Box<Error> {
     fn from(e: E) -> Box<Error> { Box::new(e) }
 }
