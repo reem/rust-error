@@ -1,13 +1,13 @@
 [package]
 
 name = "error"
-version = "0.1.7"
+version = "0.1.9"
 authors = ["Jonathan Reem <jonathan.reem@gmail.com>"]
 description = "A fancy error type for highly generic cases."
 repository = "https://github.com/reem/rust-error"
 license = "MIT"
 
 [dependencies]
-typeable = "*"
-traitobject = "*"
+typeable = "0.1"
+traitobject = "0"
 
